@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gourmet Explorer - React</title>
+  <style>
+    :root {
+      --primary: #ff6b6b;
+      --secondary: #4ecdc4;
+      --dark: #292f36;
+      --light: #f7fff7;
+      --accent: #ffe66d;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f9f5f0;
+      background-image: radial-gradient(circle at 10% 20%, rgba(255, 235, 205, 0.5) 0%, transparent 20%),
+                        radial-gradient(circle at 90% 80%, rgba(255, 218, 185, 0.5) 0%, transparent 20%);
+      margin: 0;
+      padding: 0;
+      color: var(--dark);
+      line-height: 1.6;
+    }
+    
+    .app-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    h1 {
+      text-align: center;
+      color: var(--primary);
+      font-size: 3rem;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+      font-family: 'Brush Script MT', cursive;
+    }
+    
+    .subtitle {
+      text-align: center;
+      color: var(--dark);
+      margin-bottom: 30px;
+      font-style: italic;
+      position: relative;
+    }
+    
+    .subtitle:after {
+      content: "";
+      display: block;
+      width: 100px;
+      height: 3px;
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+      margin: 10px auto;
+      border-radius: 3px;
+    }
+    
+    .search-input {
+      width: 100%;
+      max-width: 500px;
+      padding: 15px 20px;
+      margin: 0 auto 30px;
+      font-size: 16px;
+      display: block;
+      border: none;
+      border-radius: 50px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      background-color: rgba(255,255,255,0.9);
+      transition: all 0.3s ease;
+      outline: none;
+    }
+    
+    .search-input:focus {
+      box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+      transform: translateY(-2px);
+    }
+    
+    .search-input::placeholder {
+      color: #aaa;
+    }
+    
+    .recipes-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 30px;
+      justify-content: center;
+      padding: 20px 0;
+    }
+    
+    .recipe-card {
+      background: white;
+      border-radius: 15px;
+      overflow: hidden;
+      width: 320px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+      position: relative;
+      animation: float 6s ease-in-out infinite;
+    }
+    
+    .recipe-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+    }
+    
+    .recipe-card:before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+    }
+    
+    .recipe-image {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .card-content {
+      padding: 20px;
+    }
+    
+    .recipe-title {
+      color: var(--primary);
+      margin-top: 0;
+      font-size: 1.5rem;
+      position: relative;
+      padding-bottom: 10px;
+    }
+    
+    .recipe-title:after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 50px;
+      height: 2px;
+      background-color: var(--secondary);
+    }
+    
+    .ingredients-list {
+      padding-left: 20px;
+      margin: 15px 0;
+    }
+    
+    .ingredient-item {
+      margin-bottom: 8px;
+      position: relative;
+      list-style-type: none;
+      padding-left: 25px;
+    }
+    
+    .ingredient-item:before {
+      content: "•";
+      color: var(--secondary);
+      font-size: 1.5rem;
+      position: absolute;
+      left: 0;
+      top: -5px;
+    }
+    
+    .no-results {
+      text-align: center;
+      color: var(--primary);
+      font-size: 1.2rem;
+      margin-top: 50px;
+      width: 100%;
+    }
+    
+    @media (max-width: 768px) {
+      .recipe-card {
+        width: 100%;
+        max-width: 350px;
+      }
+      
+      h1 {
+        font-size: 2.2rem;
+      }
+    }
+    
+    /* Floating animation for cards */
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0px); }
+    }
+    
+    .recipe-card:nth-child(2n) {
+      animation-delay: 0.5s;
+    }
+    
+    .recipe-card:nth-child(3n) {
+      animation-delay: 1s;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="root"></div>
+
+  <!-- React & Babel CDN -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    function Greetings() {
+      const [data, setData] = useState([]);
+      const [search, setSearch] = useState("");
+
+      useEffect(() => {
+        const foodItems = async () => {
+          try {
+            const res = await fetch('https://dummyjson.com/recipes');
+            const result = await res.json();
+            setData(result.recipes);
+          } catch (err) {
+            console.error('Error fetching data:', err);
+          }
+        };
+        foodItems();
+      }, []);
+
+      const filteredData = data.filter(item =>
+        item.name.toLowerCase().includes(search.toLowerCase()) ||
+        item.ingredients.some(ingredient => 
+          ingredient.toLowerCase().includes(search.toLowerCase())
+        )
+      );
+
+      return (
+        <div className="app-container">
+          <h1>Gourmet Explorer</h1>
+          <p className="subtitle">Discover culinary delights from around the world</p>
+
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Search recipes..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+
+          {filteredData.length > 0 ? (
+            <div className="recipes-container">
+              {filteredData.map((item) => (
+                <div key={item.id} className="recipe-card">
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="recipe-image"
+                  />
+                  <div className="card-content">
+                    <h3 className="recipe-title">{item.name}</h3>
+                    <p><strong>Ingredients:</strong></p>
+                    <ul className="ingredients-list">
+                      {item.ingredients.map((ingredient, i) => (
+                        <li key={i} className="ingredient-item">{ingredient}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="no-results">
+              <p>No recipes found matching your search.</p>
+              <p>Try a different term or browse all recipes.</p>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<Greetings />);
+  </script>
+</body>
+</html>

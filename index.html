@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gourmet Explorer - JavaScript</title>
+  <style>
+    :root {
+      --primary: #ff6b6b;
+      --secondary: #4ecdc4;
+      --dark: #292f36;
+      --light: #f7fff7;
+      --accent: #ffe66d;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f9f5f0;
+      background-image: radial-gradient(circle at 10% 20%, rgba(255, 235, 205, 0.5) 0%, transparent 20%),
+                        radial-gradient(circle at 90% 80%, rgba(255, 218, 185, 0.5) 0%, transparent 20%);
+      padding: 20px;
+      color: var(--dark);
+      line-height: 1.6;
+    }
+    
+    h1 {
+      text-align: center;
+      color: var(--primary);
+      font-size: 3rem;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+      font-family: 'Brush Script MT', cursive;
+    }
+    
+    .subtitle {
+      text-align: center;
+      color: var(--dark);
+      margin-bottom: 30px;
+      font-style: italic;
+      position: relative;
+    }
+    
+    .subtitle:after {
+      content: "";
+      display: block;
+      width: 100px;
+      height: 3px;
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+      margin: 10px auto;
+      border-radius: 3px;
+    }
+    
+    #searchBox {
+      width: 100%;
+      max-width: 500px;
+      padding: 15px 20px;
+      margin: 0 auto 30px;
+      font-size: 16px;
+      display: block;
+      border: none;
+      border-radius: 50px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      background-color: rgba(255,255,255,0.9);
+      transition: all 0.3s ease;
+      outline: none;
+    }
+    
+    #searchBox:focus {
+      box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+      transform: translateY(-2px);
+    }
+    
+    #searchBox::placeholder {
+      color: #aaa;
+    }
+    
+    #container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 30px;
+      justify-content: center;
+      padding: 20px 0;
+    }
+    
+    .card {
+      background: white;
+      border-radius: 15px;
+      overflow: hidden;
+      width: 320px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    
+    .card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+    }
+    
+    .card:before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+    }
+    
+    .card img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .card-content {
+      padding: 20px;
+    }
+    
+    .card h3 {
+      color: var(--primary);
+      margin-top: 0;
+      font-size: 1.5rem;
+      position: relative;
+      padding-bottom: 10px;
+    }
+    
+    .card h3:after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 50px;
+      height: 2px;
+      background-color: var(--secondary);
+    }
+    
+    .card ul {
+      padding-left: 20px;
+      margin: 15px 0;
+    }
+    
+    .card li {
+      margin-bottom: 8px;
+      position: relative;
+      list-style-type: none;
+      padding-left: 25px;
+    }
+    
+    .card li:before {
+      content: "•";
+      color: var(--secondary);
+      font-size: 1.5rem;
+      position: absolute;
+      left: 0;
+      top: -5px;
+    }
+    
+    .no-results {
+      text-align: center;
+      color: var(--primary);
+      font-size: 1.2rem;
+      margin-top: 50px;
+      width: 100%;
+    }
+    
+    @media (max-width: 768px) {
+      .card {
+        width: 100%;
+        max-width: 350px;
+      }
+      
+      h1 {
+        font-size: 2.2rem;
+      }
+    }
+    
+    /* Floating animation for cards */
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0px); }
+    }
+    
+    .card {
+      animation: float 6s ease-in-out infinite;
+    }
+    
+    .card:nth-child(2n) {
+      animation-delay: 0.5s;
+    }
+    
+    .card:nth-child(3n) {
+      animation-delay: 1s;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Gourmet Explorer</h1>
+  <p class="subtitle">Discover culinary delights from around the world</p>
+
+  <input type="text" id="searchBox" placeholder="Search recipes by name..." />
+
+  <section id="container"></section>
+
+  <script>
+    let foodItems = [];
+
+    const fetchData = async () => {
+      try {
+        let response = await fetch('https://dummyjson.com/recipes');
+        let data = await response.json();
+        foodItems = data.recipes;
+        displayItems(foodItems); // Show all on load
+      } catch (err) {
+        console.log('Data not found', err);
+        document.getElementById('container').innerHTML = `
+          <div class="no-results">
+            <p>Oops! We couldn't load the recipes.</p>
+            <p>Please check your connection and try again.</p>
+          </div>
+        `;
+      }
+    };
+
+    const displayItems = (items) => {
+      const container = document.getElementById('container');
+      if (items.length === 0) {
+        container.innerHTML = `
+          <div class="no-results">
+            <p>No recipes found matching your search.</p>
+            <p>Try a different term or browse all recipes.</p>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = items.map(item => `
+        <div class="card">
+          <img src="${item.image}" alt="${item.name}" />
+          <div class="card-content">
+            <h3>${item.name}</h3>
+            <p><strong>Ingredients:</strong></p>
+            <ul>
+              ${item.ingredients.map(ing => `<li>${ing}</li>`).join('')}
+            </ul>
+          </div>
+        </div>
+      `).join('');
+    };
+
+    // Add filter event listener
+    document.getElementById('searchBox').addEventListener('input',(e)=> {
+        let inputVal = e.target.value.toLowerCase();
+        let filterItems = foodItems.filter(productItem => 
+          productItem.name.toLowerCase().includes(inputVal) ||
+          productItem.ingredients.some(ing => ing.toLowerCase().includes(inputVal))
+        );
+        displayItems(filterItems)
+    })
+
+    fetchData();
+  </script>
+</body>
+</html>
